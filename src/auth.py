@@ -9,11 +9,14 @@ def create_session(token, now=None):
 
     A token is a dict like {"sub": "<user>", "exp": <unix_ts>}.
 
-    BUG: token expiry ("exp") is never checked, so an expired token still
-    produces an authenticated session. This is the security defect that the
-    SDLC artifact chain is driven to fix.
+    Fixed security defect (auth-expired-token-001): an expired token
+    (exp <= now) previously still produced an authenticated session.
+    Now it raises ValueError — no session is created — while a valid
+    token (exp > now) behaves exactly as before.
     """
     now = now if now is not None else time.time()
+    if not token_is_valid(token, now):
+        raise ValueError("token expired")
     return {"user": token["sub"], "authenticated": True}
 
 

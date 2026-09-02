@@ -68,3 +68,5 @@ Sign-off(待填):
 - Spec reviewed by: ___________ (date)
 - Approval: Product / Engineering / Security signers, recorded here before implementation starts.
 - Change status: Approved-for-implementation / Approved-with-conditions / Rejected (pending review).
+
+That is the completed **spec.md** — all required sections present (Intent linkage, Functional requirements with "系统必须…" and unique IDs SYS-AUTH-001…006, Acceptance criteria AC-1…AC-6, Security/privacy/compliance, Reliability & observability, Compatibility/migration/rollback, Risks & alternatives, Decision & sign-off), with each intent Open question resolved into a sign-off decision. Persist into the repo as `spec.md`.

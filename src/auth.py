@@ -1,7 +1,7 @@
 """Minimal auth for the checkout-api demo service."""
 import time
 
-SESSION_TTL = 3600
+SESSION_TTL = 3600  # seconds; session lifetime hint (unchanged behavior)
 
 
 def create_session(token, now=None):

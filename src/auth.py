@@ -1,5 +1,5 @@
 """Minimal auth for the checkout-api demo service."""
-import time
+import time  # stdlib clock source for expiry checks
 
 SESSION_TTL = 3600  # seconds; session lifetime hint (unchanged behavior)
 

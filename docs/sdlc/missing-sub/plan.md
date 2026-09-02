@@ -1,5 +1,3 @@
-I have full context from the intent and spec. Producing plan.md now.
-
 # Plan: 认证令牌缺失 sub 声明映射为 ValueError（4xx）而非 KeyError/500
 
 ## 1. Change overview

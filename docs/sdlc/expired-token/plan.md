@@ -1,25 +1,3 @@
-Sandbox remains unavailable (image not built). Pure content authoring — I'll write plan.md here to be persisted into the repo as `plan.md`.
-
-```markdown
-# Plan: Enforce token expiry in create_session (auth-expired-token-001)
-
-## Inputs
-- intent.md auth-expired-token-001 (Accepted) — problem, desired outcome, constraints, non-goals, open questions.
-- spec.md — SYS-AUTH-001…006, AC-1…AC-6, Decision & sign-off (OQ1–OQ4 resolved).
-- Repository context provided in the defect intake: `src/auth.py` (source), `tests/test_auth.py` (existing suite), AGENTS.md (make targets, Python3-stdlib-only, no external deps, no signature changes, no external-suite regression).
-
-Current code (from intake):
-```python
-# src/auth.py
-SESSION_TTL = 3600
-def create_session(token, now=None):
-    now = now if now is not None else time.time()
-    return {"user": token["sub"], "authenticated": True}
-def token_is_valid(token, now=None):
-    now = now if now is not None else time.time()
-    return token.get("exp", 0) > now
-```
-
 ## Change map
 
 | # | File | Change | Rationale / requirement |
@@ -67,6 +45,3 @@ Build targets checked unchanged: `make test` (discover -s tests → OK), `make l
 ## Plan deviations
 - Deviation 0 (recorded at planning time): the execution sandbox image (`qm-sandbox-local:latest`) is not yet built, so no `execute`-based build/test can run in this authoring session; plan.md (like intent.md and spec.md) is produced as pure content from the provided repo context. Execution sequence V1–V4 must therefore be re-run in an environment where `make test`/`make lint` can actually execute before any completion/merge claim is made.
 - Any later change to scope, files, or the verification steps above must be logged here with who/why/when before the merge gate HG1 is lifted.
-```
-
-That's the completed **plan.md** — all required sections present (Inputs, Change map table covering the src/auth.py fix and the new tests/test_auth_expired.py regression tests, Execution sequence, Verification plan, Risks & blast radius, Alternatives rejected, Human gates noting merge-to-main needs named human authorization, Plan deviations). Persist into the repo as `plan.md`.

@@ -1,0 +1,16 @@
+id: auth-expired-token-001
+source: sdlc-review-finding-2026-09-02
+intent: expired tokens must never create an authenticated session
+decision_ref: docs/sdlc/expired-token/DECISION.md
+setup:
+  repository_ref: main
+agent_task: >
+  An expired bearer token must not create a session. create_session must raise
+  ValueError for expired tokens, without weakening existing tests.
+checks:
+  - command: make test
+    expected_exit_code: 0
+  - invariant: tests/test_auth_expired.py asserts ValueError on an expired token
+  - invariant: valid-token session behavior unchanged
+human_review:
+  required_for: auth_semantics_or_contract_change

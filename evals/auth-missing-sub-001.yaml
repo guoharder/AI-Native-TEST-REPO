@@ -1,0 +1,18 @@
+id: auth-missing-sub-001
+source: production-incident-2026-09-02 (GitHub issue #2, SEV-2)
+intent: a valid but non-expired token missing the "sub" claim must never cause an unhandled 500; it is rejected as a client error and no session is created
+decision_ref: docs/sdlc/missing-sub/DECISION.md
+setup:
+  repository_ref: main
+agent_task: >
+  create_session must raise ValueError (mapped to a 4xx at the edge) when a
+  non-expired token lacks the "sub" claim, instead of leaking KeyError / HTTP 500,
+  without weakening existing tests.
+checks:
+  - command: make test
+    expected_exit_code: 0
+  - invariant: tests/test_auth_missing_sub.py asserts ValueError (not KeyError) on a valid token missing "sub"
+  - invariant: expired-token behavior (auth-expired-token-001) unchanged
+  - invariant: valid-token session behavior unchanged
+human_review:
+  required_for: auth_semantics_or_contract_change

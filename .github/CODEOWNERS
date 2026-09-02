@@ -1,0 +1,5 @@
+# High-risk surfaces require a code-owner review before merge.
+# Low-risk paths (docs, tests) are intentionally NOT owned -> autonomous lane.
+/src/auth.py            @guoharder
+/src/                   @guoharder
+/.github/workflows/     @guoharder

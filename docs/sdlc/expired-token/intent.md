@@ -1,0 +1,70 @@
+The sandbox image isn't built yet (every `execute` is failing on the missing image, not on anything I can fix from inside). The task — producing `intent.md` for defect `auth-expired-token-001` — is pure content authoring grounded in the provided repo context (source, test, AGENTS.md), so no tooling is actually required to write it correctly. I'll produce the artifact directly here; you'll persist it into the repo as `intent.md`.
+
+```markdown
+# Intent: Enforce token expiry in create_session (auth-expired-token-001)
+
+## Title
+create_session() must reject expired bearer tokens
+
+## Owner / Product owner / Source
+- Owner: checkout-api repo maintainer
+- Product owner: checkout-api product owner
+- Source: safety/SDLC defect intake — auth-expired-token-001
+
+## Status
+Accepted — analyst approved, work not started
+
+## Risk class
+Security (high). Authentication-session correctness; an expired token yields a live authenticated session.
+
+## Problem (evidence)
+`src/auth.py::create_session()` returns an authenticated session whenever `token["sub"]` exists, without ever inspecting the token's `exp` claim. `token_is_valid()` (which does perform the `exp` check, returning `token.get("exp", 0) > now`) exists but is call-site-orphaned, and the tests only exercise the non-expired path:
+
+- `create_session()` body ignores expiry entirely — an expired token still returns `{"authenticated": True}`.
+- Current test suite (tests/test_auth.py) covers only a valid, non-expired token; it never asserts the expired-token rejection case, so the defect is unguarded.
+- An attacker replaying a past-dated token is granted an active session for as long as the service trusts expired credentials — session TTL semantics (SESSION_TTL = 3600) are thereby bypassed.
+
+Reproduction (conceptual, uncommitted):
+```python
+token = {"sub": "alice", "exp": 900}   # expired: 900 <= now(1000)
+session = create_session(token, now=1000)
+assert session["authenticated"] is True   # FAILS expectation — bug evidence
+```
+
+## Desired outcome
+`create_session(token, now=None)` refuses tokens whose `exp` has passed (i.e. rejects when `exp <= now`, and treats a missing `now` as `time.time()`, consistent with `token_is_valid`). An expired token raises a clear, non-authenticated outcome instead of returning a session. Valid tokens keep behaving exactly as today. The orphaned expiry logic in `token_is_valid()` and the new guard in `create_session()` should agree on the same rule (allowed gap), avoiding drift between the two.
+
+## Affected users and systems
+- Users holding bearer tokens for checkout-api demo service (theirs is the credential exposed by the defect).
+- The checkout-api authentication/session path and its SESSION_TTL semantics.
+- CI gate: `make test` and `make lint` (Python 3, no new external dependency).
+
+## Constraints
+- Python 3, standard library only — no external deps allowed.
+- `make lint` (`py_compile`) must still exit 0.
+- `make test` must pass its unittest suite (`OK`) — existing passing tests must not regress.
+- No change in public function signatures or the success path's behavior for valid tokens.
+
+## Non-goals
+- Not redesigning the token format or adopting real JWT validation/signature verification.
+- Not changing token issuance/refresh flows or SESSION_TTL value itself.
+- Not hardening other auth paths beyond the `exp` check in `create_session()`.
+- Not an end-to-end network/transport hardening change.
+
+## Open questions
+1. Rejection style: raise an explicit exception (e.g. `ValueError`) vs. returning a falsy/`authenticated: False` result — caller expectations need confirming before implementation.
+2. Strictness on a missing `exp` (e.g. malformed token) — reject unconditionally, or mirror `token_is_valid()`'s `token.get("exp", 0)` default-0 (which also rejects)? Decide which semantic `create_session()` should own.
+3. Clock tolerance: enforce plain `now >= exp` rejection (no grace), or allow a small skew window for expiry-at-transport? (Default proposal: reject when `exp <= now`, no added grace, unless Product pushes back.)
+4. Should `token_is_valid()` become the single shared primitive `create_session()` calls, or should the check be inlined with a named helper to keep the diff minimal?
+
+## Success evidence
+- New unittest: expired token passed to `create_session()` (with explicit `now` greater than `exp`) yields no authenticated session — asserted exactly, mirroring the "Desired outcome" behavior. Malformed (missing `exp`) token case, if decided, also covered.
+- Existing tests (valid-token path) still pass.
+- `make test` ends in `OK`; `make lint` exits 0.
+- Code review confirms one expiry rule source (no duplicated/divergent date math between `token_is_valid()` and `create_session()`).
+
+## Decision record
+(Empty until the change is implemented. To be filled with the agreed rejection style, the missing-`exp` policy, the shared `token_is_valid()`-primitive decision, and the resolution of the Open questions above.)
+```
+
+That's the completed **intent.md** — every required section present (title, Owner/Product owner/Source/Status/Risk class, Problem with evidence, Desired outcome, Affected users and systems, Constraints, Non-goals, Open questions, Success evidence, Decision record), grounded strictly in the provided source and test context for `auth-expired-token-001`.

@@ -11,12 +11,12 @@ def create_session(token, now=None):
 
     Fixed security defect (auth-expired-token-001): an expired token
     (exp <= now) previously still produced an authenticated session.
-    Now it returns None — no session is created — while a valid token
-    (exp > now) behaves exactly as before.
+    Now it raises ValueError — no session is created — while a valid
+    token (exp > now) behaves exactly as before.
     """
     now = now if now is not None else time.time()
     if not token_is_valid(token, now):
-        return None
+        raise ValueError("token expired")
     return {"user": token["sub"], "authenticated": True}
 
 

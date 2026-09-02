@@ -1,20 +1,24 @@
+"""Test that an expired token makes create_session raise ValueError.
+
+Security defect (auth-expired-token-001): create_session must reject
+expired tokens (exp <= now) by raising ValueError("token expired").
+Only stdlib unittest is used.
+"""
 import unittest
+
+import sys
+import os
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from src.auth import create_session
 
 
-class TestAuthExpiredSession(unittest.TestCase):
-    """Regression guard for auth-expired-token-001.
-
-    An expired token must not produce an authenticated session.
-    Fix-first test: assert the returns-None contract this fix
-    is driven to enforce.
-    """
-
-    def test_expired_token_creates_no_session(self):
-        token = {"sub": "mallory", "exp": 500}  # expired: 500 <= now(1000)
-        session = create_session(token, now=1000)
-        self.assertIsNone(session)
+class ExpiredTokenTest(unittest.TestCase):
+    def test_expired_token_raises_value_error(self):
+        expired = {"sub": "mallory", "exp": 500}
+        with self.assertRaises(ValueError):
+            create_session(expired, now=1000)
 
 
 if __name__ == "__main__":

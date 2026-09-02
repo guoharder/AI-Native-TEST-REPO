@@ -13,10 +13,19 @@ def create_session(token, now=None):
     (exp <= now) previously still produced an authenticated session.
     Now it raises ValueError — no session is created — while a valid
     token (exp > now) behaves exactly as before.
+
+    Fixed security defect (auth-missing-sub-001): a structurally valid
+    but unexpired token lacking the "sub" claim previously raised an
+    uncaught KeyError, surfacing as an HTTP 500 with no session created.
+    Now it raises ValueError("missing sub claim") — no session is
+    created — while a valid token (exp > now, "sub" present) behaves
+    exactly as before.
     """
     now = now if now is not None else time.time()
     if not token_is_valid(token, now):
         raise ValueError("token expired")
+    if "sub" not in token:
+        raise ValueError("missing sub claim")
     return {"user": token["sub"], "authenticated": True}
 
 

@@ -39,4 +39,4 @@
 - 产出后观测：线上 `500` 中该栈不复现；缺 `sub` 类错误可在日志中按可识别语义区分。
 
 ## Decision record
-待人类分诊（triage）。
+guo (release owner) 于分诊接受(accepted),风险=high,授权进入 Design/Build。见 issue #2 评论。
